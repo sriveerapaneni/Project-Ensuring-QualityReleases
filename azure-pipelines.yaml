@@ -6,6 +6,7 @@ variables:
   resourceGroup: 'myResourceGroup'
   location: 'East US'
   terraformVersion: '1.0.0'
+  tfStateStorageAccount: 'svuniquetfstorage'
 
 stages:
 #--------------------------------------------#
@@ -34,7 +35,7 @@ stages:
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
         backendServiceArm: $(azureServiceConnection)
         backendAzureRmResourceGroupName: '$(resourceGroup)'
-        backendAzureRmStorageAccountName: 'tfstate$(Build.BuildId)'
+        backendAzureRmStorageAccountName: '$(tfStateStorageAccount)'
         backendAzureRmContainerName: 'tfstate'
         backendAzureRmKey: 'terraform.tfstate'
     
@@ -459,6 +460,5 @@ stages:
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
         environmentServiceNameAzureRM: $(azureServiceConnection)
         commandOptions: '-auto-approve'
-
 
 
