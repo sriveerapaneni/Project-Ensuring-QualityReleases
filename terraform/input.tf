@@ -20,3 +20,6 @@ variable admin_username {}
 # Log Analytics
 variable workspace_name {}
 
+# App Service
+variable app_suffix {}
+
