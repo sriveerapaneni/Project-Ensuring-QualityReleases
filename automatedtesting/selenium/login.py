@@ -335,9 +335,11 @@ def test_add_to_cart():
         add_to_cart_button.click()
         logger.info('Product added to cart')
         
-        # Verify cart badge shows 1 item
+        # Verify cart badge shows 1 item (wait for badge to appear after click)
         logger.info('Verifying cart badge...')
-        cart_badge = driver.find_element(By.CLASS_NAME, 'shopping_cart_badge')
+        cart_badge = wait.until(
+            EC.visibility_of_element_located((By.CLASS_NAME, 'shopping_cart_badge'))
+        )
         cart_count = cart_badge.text
         logger.info(f'Cart badge count: {cart_count}')
         
