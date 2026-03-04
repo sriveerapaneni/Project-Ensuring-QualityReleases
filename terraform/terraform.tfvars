@@ -20,3 +20,5 @@ admin_username = "azureadmin"
 # Log Analytics
 workspace_name = "myApplication-log-analytics"
 
+# App Service unique suffix (globally unique app name: myApplication-AppService-sv707d01)
+app_suffix = "sv707d01"
