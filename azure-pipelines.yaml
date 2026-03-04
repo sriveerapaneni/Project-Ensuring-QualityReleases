@@ -176,6 +176,7 @@ stages:
               appName: $(appServiceName)
               package: '$(Pipeline.Workspace)/drop-fakerestapi/fakerestapi-$(Build.BuildId).zip'
               deploymentMethod: 'zipDeploy'
+              appSettings: '-WEBSITE_RUN_FROM_PACKAGE 1'
 
 #--------------------------------------------#
 # TEST - INTEGRATION (Postman)
@@ -370,13 +371,10 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          # Install Chrome stable
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
-          sudo apt-get update -q
-          sudo apt-get install -y google-chrome-stable
+          # Chrome is pre-installed on ubuntu-latest agents
+          # Just verify the version and let selenium-manager handle ChromeDriver
+          google-chrome --version || (sudo apt-get update -q && sudo apt-get install -y google-chrome-stable)
           echo "Chrome version: $(google-chrome --version)"
-          # ChromeDriver is managed automatically by selenium-manager (Selenium 4.6+)
     
     # Install Selenium and dependencies
     - task: Bash@3
