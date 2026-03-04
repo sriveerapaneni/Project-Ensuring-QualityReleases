@@ -4,7 +4,7 @@
 	"values": [
 		{
 			"key": "baseUrl",
-			"value": "https://your-app-service-name.azurewebsites.net",
+			"value": "https://localhost:5000",
 			"type": "default",
 			"enabled": true
 		},
