@@ -7,6 +7,14 @@ provider "azurerm" {
   features {}
 }
 terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+    }
+    random = {
+      source  = "hashicorp/random"
+    }
+  }
   backend "azurerm" {
     storage_account_name = "svuniquetfstorage"
     container_name       = "tfstate"
