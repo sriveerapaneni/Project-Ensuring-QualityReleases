@@ -221,12 +221,10 @@ stages:
         script: |
           echo "Running Postman tests against: https://$(appServiceName).azurewebsites.net"
           
-          # Update environment file with App Service URL
-          sed -i 's|"value": "http://localhost:5000"|"value": "https://$(appServiceName).azurewebsites.net"|g' TestEnvironment.json
-          
-          # Run Newman with JUnit reporter
+          # Run Newman - override baseUrl directly via --env-var (no sed needed)
           newman run StarterAPIs.json \
             -e TestEnvironment.json \
+            --env-var "baseUrl=https://$(appServiceName).azurewebsites.net" \
             --reporters cli,junitfull \
             --reporter-junitfull-export $(System.DefaultWorkingDirectory)/postman-results.xml
     
@@ -372,21 +370,13 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          # Install Chrome
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo apt install ./google-chrome-stable_current_amd64.deb -y
-          
-          # Install ChromeDriver
-          CHROME_VERSION=$(google-chrome --version | awk '{print $3}' | cut -d'.' -f1)
-          wget https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_VERSION -O chrome_version
-          CHROMEDRIVER_VERSION=$(cat chrome_version)
-          wget https://chromedriver.storage.googleapis.com/$CHROMEDRIVER_VERSION/chromedriver_linux64.zip
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin/
-          sudo chmod +x /usr/local/bin/chromedriver
-          
+          # Install Chrome stable
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
+          sudo apt-get update -q
+          sudo apt-get install -y google-chrome-stable
           echo "Chrome version: $(google-chrome --version)"
-          echo "ChromeDriver version: $(chromedriver --version)"
+          # ChromeDriver is managed automatically by selenium-manager (Selenium 4.6+)
     
     # Install Selenium and dependencies
     - task: Bash@3
@@ -394,7 +384,7 @@ stages:
       inputs:
         targetType: 'inline'
         script: |
-          pip install selenium
+          pip install "selenium>=4.6.0"
           pip install requests
     
     # Run Selenium Tests
