@@ -64,7 +64,9 @@ def get_driver(headless=False):
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument("--remote-debugging-port=9222")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-software-rasterizer")
+    options.add_argument("--disable-background-networking")
 
     if headless:
         logger.info('Running in headless mode')
@@ -152,7 +154,7 @@ def test_successful_login():
     driver = None
     try:
         # Use environment variable to determine headless mode (set in CI/CD)
-        headless = os.getenv('HEADLESS', 'False').lower() == 'true'
+        headless = os.getenv('HEADLESS', '0') in ('1', 'true', 'True', 'TRUE')
         driver = get_driver(headless=headless)
         
         # Perform login
@@ -200,7 +202,7 @@ def test_invalid_login():
     
     driver = None
     try:
-        headless = os.getenv('HEADLESS', 'False').lower() == 'true'
+        headless = os.getenv('HEADLESS', '0') in ('1', 'true', 'True', 'TRUE')
         driver = get_driver(headless=headless)
         
         logger.info('Navigating to login page...')
@@ -255,7 +257,7 @@ def test_locked_user():
     
     driver = None
     try:
-        headless = os.getenv('HEADLESS', 'False').lower() == 'true'
+        headless = os.getenv('HEADLESS', '0') in ('1', 'true', 'True', 'TRUE')
         driver = get_driver(headless=headless)
         
         logger.info('Navigating to login page...')
@@ -310,7 +312,7 @@ def test_add_to_cart():
     
     driver = None
     try:
-        headless = os.getenv('HEADLESS', 'False').lower() == 'true'
+        headless = os.getenv('HEADLESS', '0') in ('1', 'true', 'True', 'TRUE')
         driver = get_driver(headless=headless)
         
         # Login first
