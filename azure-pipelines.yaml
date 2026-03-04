@@ -7,6 +7,8 @@ variables:
   location: 'East US'
   terraformVersion: '1.0.0'
   tfStateStorageAccount: 'svuniquetfstorage'
+  subscriptionId: 'ae0c02e7-8b4b-4b32-ac32-179af329442d'
+  # armClientId, armClientSecret, armTenantId must be set as secret variables in Azure DevOps Pipeline Library
 
 stages:
 #--------------------------------------------#
@@ -56,6 +58,22 @@ stages:
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
         environmentServiceNameAzureRM: $(azureServiceConnection)
     
+    # Import existing Resource Group into state (safe to run if already imported)
+    - task: Bash@3
+      displayName: 'Import Existing Resource Group'
+      inputs:
+        targetType: 'inline'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+        script: |
+          terraform import \
+            module.resource_group.azurerm_resource_group.test \
+            /subscriptions/$(subscriptionId)/resourceGroups/$(resourceGroup) || true
+      env:
+        ARM_CLIENT_ID: $(armClientId)
+        ARM_CLIENT_SECRET: $(armClientSecret)
+        ARM_TENANT_ID: $(armTenantId)
+        ARM_SUBSCRIPTION_ID: $(subscriptionId)
+
     # Terraform Apply
     - task: TerraformTaskV2@2
       displayName: 'Terraform Apply'
