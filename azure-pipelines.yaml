@@ -1,7 +1,7 @@
 name: Azure Pipelines
 
 variables:
-  python.version: '3.7.6'
+  python.version: '3.12'
   azureServiceConnection: 'myServiceConnection' # Update with your Azure service connection name
   resourceGroup: 'myResourceGroup'
   location: 'East US'
@@ -182,7 +182,9 @@ stages:
 #--------------------------------------------#
 - stage: IntegrationTest
   displayName: 'Integration Tests'
-  dependsOn: Deploy
+  dependsOn:
+  - Deploy
+  - ProvisionInfrastructure
   jobs:
   - job: PostmanTests
     displayName: 'Run Postman Integration Tests'
@@ -199,7 +201,7 @@ stages:
     - task: NodeTool@0
       displayName: 'Install Node.js'
       inputs:
-        versionSpec: '14.x'
+        versionSpec: '18.x'
     
     # Install Newman (Postman CLI)
     - task: Bash@3
@@ -243,7 +245,9 @@ stages:
 #--------------------------------------------#
 - stage: PerformanceTest
   displayName: 'Performance Tests'
-  dependsOn: Deploy
+  dependsOn:
+  - Deploy
+  - ProvisionInfrastructure
   jobs:
   - job: JMeterStressTest
     displayName: 'JMeter Stress Test'
@@ -256,24 +260,17 @@ stages:
     - download: current
       artifact: jmeter
     
-    # Install JMeter
+    # Install JMeter and Run Stress Test
     - task: Bash@3
-      displayName: 'Install Apache JMeter'
+      displayName: 'Install JMeter and Run Stress Test'
       inputs:
         targetType: 'inline'
         script: |
-          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.4.1.tgz
+          wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.4.1.tgz
           tar -xzf apache-jmeter-5.4.1.tgz
-          echo "##vso[task.setvariable variable=JMETER_HOME]$(pwd)/apache-jmeter-5.4.1"
-    
-    # Run Stress Test
-    - task: Bash@3
-      displayName: 'Run JMeter Stress Test'
-      inputs:
-        targetType: 'inline'
-        script: |
+          JMETER_HOME=$(pwd)/apache-jmeter-5.4.1
+          mkdir -p $(System.DefaultWorkingDirectory)/stress-test-report
           echo "Running Stress Test against: https://$(appServiceName).azurewebsites.net"
-          
           $JMETER_HOME/bin/jmeter -n \
             -t $(Pipeline.Workspace)/jmeter/StressTest.jmx \
             -JBASE_URL=https://$(appServiceName).azurewebsites.net \
@@ -307,24 +304,17 @@ stages:
     - download: current
       artifact: jmeter
     
-    # Install JMeter
+    # Install JMeter and Run Endurance Test
     - task: Bash@3
-      displayName: 'Install Apache JMeter'
+      displayName: 'Install JMeter and Run Endurance Test'
       inputs:
         targetType: 'inline'
         script: |
-          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.4.1.tgz
+          wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.4.1.tgz
           tar -xzf apache-jmeter-5.4.1.tgz
-          echo "##vso[task.setvariable variable=JMETER_HOME]$(pwd)/apache-jmeter-5.4.1"
-    
-    # Run Endurance Test
-    - task: Bash@3
-      displayName: 'Run JMeter Endurance Test'
-      inputs:
-        targetType: 'inline'
-        script: |
+          JMETER_HOME=$(pwd)/apache-jmeter-5.4.1
+          mkdir -p $(System.DefaultWorkingDirectory)/endurance-test-report
           echo "Running Endurance Test against: https://$(appServiceName).azurewebsites.net"
-          
           $JMETER_HOME/bin/jmeter -n \
             -t $(Pipeline.Workspace)/jmeter/EnduranceTest.jmx \
             -JBASE_URL=https://$(appServiceName).azurewebsites.net \
@@ -353,7 +343,9 @@ stages:
 #--------------------------------------------#
 - stage: UITest
   displayName: 'Functional UI Tests'
-  dependsOn: Deploy
+  dependsOn:
+  - Deploy
+  - ProvisionInfrastructure
   jobs:
   - job: SeleniumTests
     displayName: 'Run Selenium UI Tests'
