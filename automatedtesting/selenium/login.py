@@ -59,14 +59,16 @@ def get_driver(headless=False):
     
     options = ChromeOptions()
     
-    if headless:
-        logger.info('Running in headless mode')
-        options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-    
+    # Always add CI-safe flags
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
+    options.add_argument("--remote-debugging-port=9222")
+
+    if headless:
+        logger.info('Running in headless mode')
+        options.add_argument("--headless=new")  # Chrome 112+ requires --headless=new
     
     try:
         driver = webdriver.Chrome(options=options)
