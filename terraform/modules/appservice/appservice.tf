@@ -18,10 +18,12 @@ resource "azurerm_app_service" "test" {
 
   site_config {
     dotnet_framework_version = "v4.0"
-    scm_type                 = "None"
   }
 
+  # WEBSITE_RUN_FROM_PACKAGE must be 0 or absent for regular zip deploy.
+  # Value of "1" causes Azure to mount from a managed blob that doesn't exist,
+  # which leaves a 503-returning Web.config placeholder in wwwroot.
   app_settings = {
-    "WEBSITE_RUN_FROM_PACKAGE" = "1"
+    "WEBSITE_RUN_FROM_PACKAGE" = "0"
   }
 }
