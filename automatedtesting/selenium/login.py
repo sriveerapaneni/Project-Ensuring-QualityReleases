@@ -320,26 +320,61 @@ def test_add_to_cart():
             logger.error('✗ TEST FAILED: Could not login')
             return False
         
-        wait = WebDriverWait(driver, 10)
+        wait = WebDriverWait(driver, 15)
         
-        # Find and click "Add to cart" button for first product
+        # Wait for inventory list to be fully loaded
+        logger.info('Waiting for inventory list...')
+        wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'inventory_list')))
+        
+        # Try data-test attribute first (most stable), fall back to id prefix, then class
         logger.info('Locating "Add to cart" button for first product...')
-        add_to_cart_button = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, '.inventory_item button'))
-        )
+        add_to_cart_button = None
+        for selector, by in [
+            ('[data-test^="add-to-cart"]', By.CSS_SELECTOR),
+            ('[id^="add-to-cart"]',        By.CSS_SELECTOR),
+            ('.btn_inventory',             By.CSS_SELECTOR),
+            ('.inventory_item button',     By.CSS_SELECTOR),
+        ]:
+            try:
+                add_to_cart_button = wait.until(EC.element_to_be_clickable((by, selector)))
+                logger.info(f'Found add-to-cart button with selector: {selector}')
+                break
+            except TimeoutException:
+                logger.info(f'Selector {selector!r} not found, trying next...')
         
-        product_name_element = driver.find_element(By.CSS_SELECTOR, '.inventory_item_name')
-        product_name = product_name_element.text
-        logger.info(f'Adding product to cart: {product_name}')
+        if add_to_cart_button is None:
+            logger.error('✗ TEST FAILED: Could not locate any add-to-cart button')
+            return False
+        
+        # Get product name (optional — don't fail if not found)
+        try:
+            product_name = driver.find_element(By.CSS_SELECTOR, '.inventory_item_name').text
+            logger.info(f'Adding product to cart: {product_name}')
+        except NoSuchElementException:
+            logger.info('Adding first inventory item to cart (name element not found)')
         
         add_to_cart_button.click()
         logger.info('Product added to cart')
         
-        # Verify cart badge shows 1 item (wait for badge to appear after click)
+        # Verify cart badge shows 1 item — try data-test first, fall back to class name
         logger.info('Verifying cart badge...')
-        cart_badge = wait.until(
-            EC.visibility_of_element_located((By.CLASS_NAME, 'shopping_cart_badge'))
-        )
+        cart_badge = None
+        for selector, by in [
+            ('[data-test="shopping-cart-badge"]', By.CSS_SELECTOR),
+            ('.shopping_cart_badge',              By.CSS_SELECTOR),
+            ('.shopping_cart_badge',              By.CLASS_NAME),
+        ]:
+            try:
+                cart_badge = wait.until(EC.visibility_of_element_located((by, selector)))
+                logger.info(f'Found cart badge with selector: {selector}')
+                break
+            except TimeoutException:
+                logger.info(f'Badge selector {selector!r} not found, trying next...')
+        
+        if cart_badge is None:
+            logger.error('✗ TEST FAILED: Cart badge did not appear after adding item')
+            return False
+        
         cart_count = cart_badge.text
         logger.info(f'Cart badge count: {cart_count}')
         
