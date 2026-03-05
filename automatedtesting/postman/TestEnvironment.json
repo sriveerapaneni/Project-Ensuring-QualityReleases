@@ -11,19 +11,19 @@
 		{
 			"key": "activityId",
 			"value": "",
-			"type": "any",
+			"type": "default",
 			"enabled": true
 		},
 		{
 			"key": "createdActivityId",
 			"value": "",
-			"type": "any",
+			"type": "default",
 			"enabled": true
 		},
 		{
 			"key": "bookId",
 			"value": "",
-			"type": "any",
+			"type": "default",
 			"enabled": true
 		}
 	],
