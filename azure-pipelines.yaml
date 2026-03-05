@@ -234,7 +234,6 @@ stages:
               appName: $(appServiceName)
               package: '$(Pipeline.Workspace)/drop-fakerestapi/fakerestapi-$(Build.BuildId).zip'
               deploymentMethod: 'zipDeploy'
-              appSettings: '-WEBSITE_RUN_FROM_PACKAGE 1'
 
           # Wait for App Service to warm up after deployment (avoids 503 on first request)
           - task: Bash@3
