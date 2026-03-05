@@ -309,6 +309,7 @@ stages:
             -e TestEnvironment.json \
             --env-var "baseUrl=https://$(appServiceName).azurewebsites.net" \
             --delay-request 500 \
+            --timeout-request 10000 \
             --reporters cli,junit \
             --reporter-junit-export $(System.DefaultWorkingDirectory)/postman-results.xml
     
