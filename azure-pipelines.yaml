@@ -294,7 +294,6 @@ stages:
         targetType: 'inline'
         script: |
           npm install -g newman
-          npm install -g newman-reporter-junit
     
     # Run Postman Tests
     - task: Bash@3
@@ -359,10 +358,11 @@ stages:
           mkdir -p $(System.DefaultWorkingDirectory)/stress-test-report
 
           echo "Running Stress Test against: https://$(appServiceName).azurewebsites.net"
-          # Force CSV output with header row so every run produces a consistent column layout
+          # BASE_URL must be hostname only (no https://) - JMX sets domain=BASE_URL + protocol=PROTOCOL separately
           $JMETER_HOME/bin/jmeter -n \
             -t $(Pipeline.Workspace)/jmeter/StressTest.jmx \
-            -JBASE_URL=https://$(appServiceName).azurewebsites.net \
+            -JBASE_URL=$(appServiceName).azurewebsites.net \
+            -JPROTOCOL=https \
             -Jjmeter.save.saveservice.output_format=csv \
             -Jjmeter.save.saveservice.print_field_names=true \
             -Jjmeter.save.saveservice.timestamp_format=ms \
@@ -419,10 +419,11 @@ stages:
           mkdir -p $(System.DefaultWorkingDirectory)/endurance-test-report
 
           echo "Running Endurance Test against: https://$(appServiceName).azurewebsites.net"
-          # Force CSV output with header row so every run produces a consistent column layout
+          # BASE_URL must be hostname only (no https://) - JMX sets domain=BASE_URL + protocol=PROTOCOL separately
           $JMETER_HOME/bin/jmeter -n \
             -t $(Pipeline.Workspace)/jmeter/EnduranceTest.jmx \
-            -JBASE_URL=https://$(appServiceName).azurewebsites.net \
+            -JBASE_URL=$(appServiceName).azurewebsites.net \
+            -JPROTOCOL=https \
             -JDURATION=300 \
             -Jjmeter.save.saveservice.output_format=csv \
             -Jjmeter.save.saveservice.print_field_names=true \
