@@ -74,26 +74,9 @@ stages:
         ARM_TENANT_ID: $(armTenantId)
         ARM_SUBSCRIPTION_ID: $(subscriptionId)
 
-    # Refresh state and remove stale App Service resources so Terraform recreates them
-    - task: Bash@3
-      displayName: 'Remove Stale AppService from State'
-      inputs:
-        targetType: 'inline'
-        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
-        script: |
-          # Remove app service resources from state if they no longer exist in Azure
-          # This forces Terraform to recreate them fresh (needed when plan kind changes Linux->Windows)
-          terraform state rm module.appservice.azurerm_app_service_plan.test 2>/dev/null || true
-          terraform state rm module.appservice.azurerm_app_service.test 2>/dev/null || true
-          terraform state rm module.appservice.random_string.app_suffix 2>/dev/null || true
-          echo "State cleanup complete - AppService will be recreated"
-      env:
-        ARM_CLIENT_ID: $(armClientId)
-        ARM_CLIENT_SECRET: $(armClientSecret)
-        ARM_TENANT_ID: $(armTenantId)
-        ARM_SUBSCRIPTION_ID: $(subscriptionId)
-
-    # Import existing App Service resources if they exist in Azure but not in state
+    # Import existing App Service resources if they exist in Azure but NOT yet in Terraform state.
+    # Uses serverFarms (camelCase) as required by the AzureRM provider.
+    # Checks state first to avoid 'Resource already managed' error on repeat runs.
     - task: Bash@3
       displayName: 'Import Existing AppService into State'
       inputs:
@@ -105,26 +88,31 @@ stages:
           APP_SUFFIX="sv707d01"
           PLAN_NAME="myApplication-AppService"
           APP_NAME="myApplication-AppService-${APP_SUFFIX}"
-          BASE_SCOPE="/subscriptions/$SUB/resourceGroups/$RG/providers/Microsoft.Web"
 
-          # Import App Service Plan if it exists in Azure
+          # Import App Service Plan only if it exists in Azure AND is not already in state
           PLAN_EXISTS=$(az appservice plan show --name "$PLAN_NAME" --resource-group "$RG" --query "name" -o tsv 2>/dev/null || echo "")
-          if [ -n "$PLAN_EXISTS" ]; then
+          PLAN_IN_STATE=$(terraform state show module.appservice.azurerm_app_service_plan.test 2>/dev/null && echo "yes" || echo "")
+          if [ -n "$PLAN_EXISTS" ] && [ -z "$PLAN_IN_STATE" ]; then
             echo "Importing App Service Plan: $PLAN_NAME"
             terraform import module.appservice.azurerm_app_service_plan.test \
-              "$BASE_SCOPE/serverfarms/$PLAN_NAME" || true
+              "/subscriptions/$SUB/resourceGroups/$RG/providers/Microsoft.Web/serverFarms/$PLAN_NAME"
+          elif [ -n "$PLAN_IN_STATE" ]; then
+            echo "App Service Plan already in Terraform state - skipping import"
           else
-            echo "App Service Plan not found in Azure - will be created"
+            echo "App Service Plan not found in Azure - will be created by Terraform"
           fi
 
-          # Import App Service if it exists in Azure
+          # Import App Service only if it exists in Azure AND is not already in state
           APP_EXISTS=$(az webapp show --name "$APP_NAME" --resource-group "$RG" --query "name" -o tsv 2>/dev/null || echo "")
-          if [ -n "$APP_EXISTS" ]; then
+          APP_IN_STATE=$(terraform state show module.appservice.azurerm_app_service.test 2>/dev/null && echo "yes" || echo "")
+          if [ -n "$APP_EXISTS" ] && [ -z "$APP_IN_STATE" ]; then
             echo "Importing App Service: $APP_NAME"
             terraform import module.appservice.azurerm_app_service.test \
-              "$BASE_SCOPE/sites/$APP_NAME" || true
+              "/subscriptions/$SUB/resourceGroups/$RG/providers/Microsoft.Web/sites/$APP_NAME"
+          elif [ -n "$APP_IN_STATE" ]; then
+            echo "App Service already in Terraform state - skipping import"
           else
-            echo "App Service not found in Azure - will be created"
+            echo "App Service not found in Azure - will be created by Terraform"
           fi
       env:
         ARM_CLIENT_ID: $(armClientId)
