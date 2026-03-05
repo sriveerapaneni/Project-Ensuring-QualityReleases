@@ -375,6 +375,7 @@ stages:
             -j $(System.DefaultWorkingDirectory)/stress-test.log
 
           # Step 2: use Python csv module (handles quoted fields correctly) to normalise the JTL
+          # Also strips embedded newlines from fields - JMeter's dashboard CSV parser cannot handle multiline quoted fields
           export RAW_JTL="$(System.DefaultWorkingDirectory)/stress-test-raw.jtl"
           export CLEAN_JTL="$(System.DefaultWorkingDirectory)/stress-test-results.jtl"
           python3 -c "
@@ -387,7 +388,10 @@ stages:
               if not rows: print('WARNING: raw JTL empty'); sys.exit(0)
               header, ncols = rows[0], len(rows[0])
               print('Header columns: ' + str(ncols))
-              good = [r for r in rows[1:] if len(r) == ncols]
+              good = []
+              for r in rows[1:]:
+                  if len(r) == ncols:
+                      good.append([c.replace('\n', ' ').replace('\r', ' ') for c in r])
               print('Kept ' + str(len(good)) + ' rows, dropped ' + str(len(rows)-1-len(good)) + ' malformed rows')
               fout = open(clean, 'w', newline='', encoding='utf-8')
               w = csv.writer(fout); w.writerow(header); w.writerows(good); fout.close()
@@ -464,6 +468,7 @@ stages:
             -j $(System.DefaultWorkingDirectory)/endurance-test.log
 
           # Step 2: use Python csv module (handles quoted fields correctly) to normalise the JTL
+          # Also strips embedded newlines from fields - JMeter's dashboard CSV parser cannot handle multiline quoted fields
           export RAW_JTL="$(System.DefaultWorkingDirectory)/endurance-test-raw.jtl"
           export CLEAN_JTL="$(System.DefaultWorkingDirectory)/endurance-test-results.jtl"
           python3 -c "
@@ -476,7 +481,10 @@ stages:
               if not rows: print('WARNING: raw JTL empty'); sys.exit(0)
               header, ncols = rows[0], len(rows[0])
               print('Header columns: ' + str(ncols))
-              good = [r for r in rows[1:] if len(r) == ncols]
+              good = []
+              for r in rows[1:]:
+                  if len(r) == ncols:
+                      good.append([c.replace('\n', ' ').replace('\r', ' ') for c in r])
               print('Kept ' + str(len(good)) + ' rows, dropped ' + str(len(rows)-1-len(good)) + ' malformed rows')
               fout = open(clean, 'w', newline='', encoding='utf-8')
               w = csv.writer(fout); w.writerow(header); w.writerows(good); fout.close()
