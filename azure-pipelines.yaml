@@ -370,6 +370,7 @@ stages:
             -Jjmeter.save.saveservice.responseData=false \
             -Jjmeter.save.saveservice.requestHeaders=false \
             -Jjmeter.save.saveservice.responseHeaders=false \
+            -Jjmeter.save.saveservice.thread_counts=false \
             -l $(System.DefaultWorkingDirectory)/stress-test-raw.jtl \
             -j $(System.DefaultWorkingDirectory)/stress-test.log
 
@@ -459,6 +460,7 @@ stages:
             -Jjmeter.save.saveservice.responseData=false \
             -Jjmeter.save.saveservice.requestHeaders=false \
             -Jjmeter.save.saveservice.responseHeaders=false \
+            -Jjmeter.save.saveservice.thread_counts=false \
             -l $(System.DefaultWorkingDirectory)/endurance-test-raw.jtl \
             -j $(System.DefaultWorkingDirectory)/endurance-test.log
 
