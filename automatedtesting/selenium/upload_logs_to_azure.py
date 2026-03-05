@@ -109,8 +109,9 @@ def parse_log_file(log_file_path):
     """
     log_entries = []
     
-    # Pattern to match log entries: YYYY-MM-DD HH:MM:SS - LEVEL - MESSAGE
-    log_pattern = re.compile(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) - (\w+) - (.+)$')
+    # Pattern to match log entries: YYYY-MM-DD HH:MM:SS[,mmm] - LEVEL - MESSAGE
+    # Python logging %(asctime)s produces "2026-03-05 10:23:45,123" (comma + ms)
+    log_pattern = re.compile(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(?:,\d+)?) - (\w+) - (.+)$')
     
     try:
         with open(log_file_path, 'r', encoding='utf-8') as f:
