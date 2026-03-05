@@ -321,6 +321,7 @@ def test_add_to_cart():
             return False
         
         wait = WebDriverWait(driver, 15)
+        wait_short = WebDriverWait(driver, 5)  # shorter timeout for fallback probes
         
         # Wait for inventory list to be fully loaded
         logger.info('Waiting for inventory list...')
@@ -336,7 +337,7 @@ def test_add_to_cart():
             ('.inventory_item button',     By.CSS_SELECTOR),
         ]:
             try:
-                add_to_cart_button = wait.until(EC.element_to_be_clickable((by, selector)))
+                add_to_cart_button = wait_short.until(EC.element_to_be_clickable((by, selector)))
                 logger.info(f'Found add-to-cart button with selector: {selector}')
                 break
             except TimeoutException:
@@ -356,16 +357,16 @@ def test_add_to_cart():
         add_to_cart_button.click()
         logger.info('Product added to cart')
         
-        # Verify cart badge shows 1 item — try data-test first, fall back to class name
+        # Verify cart badge shows 1 item — try data-test first, fall back to CSS class
         logger.info('Verifying cart badge...')
         cart_badge = None
         for selector, by in [
             ('[data-test="shopping-cart-badge"]', By.CSS_SELECTOR),
             ('.shopping_cart_badge',              By.CSS_SELECTOR),
-            ('.shopping_cart_badge',              By.CLASS_NAME),
+            ('shopping_cart_badge',               By.CLASS_NAME),
         ]:
             try:
-                cart_badge = wait.until(EC.visibility_of_element_located((by, selector)))
+                cart_badge = wait_short.until(EC.visibility_of_element_located((by, selector)))
                 logger.info(f'Found cart badge with selector: {selector}')
                 break
             except TimeoutException:
