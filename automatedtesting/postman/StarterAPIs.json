@@ -291,7 +291,7 @@
 									"    pm.expect(jsonData).to.be.an('array');",
 									"});",
 									"",
-									// Data Structure Validation (case-insensitive)
+									"// Data Structure Validation (case-insensitive)",
 									"pm.test(\"Authors have required fields\", function () {",
 									"    function hasKeyCI(obj, key){ return Object.keys(obj).some(k=>k.toLowerCase()===key.toLowerCase()); }",
 									"    var jsonData = pm.response.json();",
